@@ -90,8 +90,17 @@ plot11 <- ggplot(whiteWine,aes(x=alcohol)) +
   geom_histogram(data=subset(whiteWine, whiteWine$quality > 7, select = c("alcohol")),fill = "red", alpha = 0.2) +
   geom_histogram(data=subset(whiteWine, whiteWine$quality < 5,select = c("alcohol")),fill = "blue", alpha = 0.2) 
 
-
-grid.arrange(plot1,plot2,plot3,plot4,plot5,plot6,plot7,plot8,plot9,plot10,plot11,ncol=3,nrow=4)
+plots <- c()
+for (i in 1:11) {
+  aux <- whiteWine[i,]
+  name = names(whiteWine)[i]
+  plot <- ggplot(whiteWine,aes(x=names)) + 
+    geom_histogram(data=subset(whiteWine, whiteWine$quality > 7, select = c(name)),fill = "red", alpha = 0.2) +
+    geom_histogram(data=subset(whiteWine, whiteWine$quality < 5,select = c(name)),fill = "blue", alpha = 0.2)  
+  plots <- c(plots,plot)
+}
+plots[1]
+grid.arrange(plots[1])
 
 ?grid.arrange
 

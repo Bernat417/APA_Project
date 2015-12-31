@@ -1,4 +1,5 @@
 library(ggplot2)
+library(gridExtra)
 #Read datasets
 whiteWine <- read.table(file = "winequality-white.csv", sep = ";", header = TRUE)
 redWine <- read.table(file = "winequality-red.csv", sep = ";", header = TRUE)
@@ -46,63 +47,18 @@ vegLengths <- rbind(best$sulphates[1:180], worst$sulphates[1:180])
 names(best)
 #now make your lovely plot
 require(gridExtra)
-plot1 <- ggplot(whiteWine,aes(x=fixed.acidity)) + 
-  geom_histogram(data=subset(whiteWine, whiteWine$quality > 7, select = c("fixed.acidity")),fill = "red", alpha = 0.2) +
-  geom_histogram(data=subset(whiteWine, whiteWine$quality < 5,select = c("fixed.acidity")),fill = "blue", alpha = 0.2)  
-
-plot2 <- ggplot(whiteWine,aes(x=volatile.acidity)) + 
-  geom_histogram(data=subset(whiteWine, whiteWine$quality > 7, select = c("volatile.acidity")),fill = "red", alpha = 0.2) +
-  geom_histogram(data=subset(whiteWine, whiteWine$quality < 5,select = c("volatile.acidity")),fill = "blue", alpha = 0.2) 
-
-plot3 <- ggplot(whiteWine,aes(x=citric.acid)) + 
-  geom_histogram(data=subset(whiteWine, whiteWine$quality > 7, select = c("citric.acid")),fill = "red", alpha = 0.2) +
-  geom_histogram(data=subset(whiteWine, whiteWine$quality < 5,select = c("citric.acid")),fill = "blue", alpha = 0.2) 
-
-plot4 <- ggplot(whiteWine,aes(x=residual.sugar)) + 
-  geom_histogram(data=subset(whiteWine, whiteWine$quality > 7, select = c("residual.sugar")),fill = "red", alpha = 0.2) +
-  geom_histogram(data=subset(whiteWine, whiteWine$quality < 5,select = c("residual.sugar")),fill = "blue", alpha = 0.2) 
-
-plot5 <- ggplot(whiteWine,aes(x=chlorides)) + 
-  geom_histogram(data=subset(whiteWine, whiteWine$quality > 7, select = c("chlorides")),fill = "red", alpha = 0.2) +
-  geom_histogram(data=subset(whiteWine, whiteWine$quality < 5,select = c("chlorides")),fill = "blue", alpha = 0.2) 
-
-plot6 <- ggplot(whiteWine,aes(x=free.sulfur.dioxide)) + 
-  geom_histogram(data=subset(whiteWine, whiteWine$quality > 7, select = c("free.sulfur.dioxide")),fill = "red", alpha = 0.2) +
-  geom_histogram(data=subset(whiteWine, whiteWine$quality < 5,select = c("free.sulfur.dioxide")),fill = "blue", alpha = 0.2) 
-
-plot7 <- ggplot(whiteWine,aes(x=total.sulfur.dioxide)) + 
-  geom_histogram(data=subset(whiteWine, whiteWine$quality > 7, select = c("total.sulfur.dioxide")),fill = "red", alpha = 0.2) +
-  geom_histogram(data=subset(whiteWine, whiteWine$quality < 5,select = c("total.sulfur.dioxide")),fill = "blue", alpha = 0.2) 
-
-plot8 <- ggplot(whiteWine,aes(x=density)) + 
-  geom_histogram(data=subset(whiteWine, whiteWine$quality > 7, select = c("density")),fill = "red", alpha = 0.2) +
-  geom_histogram(data=subset(whiteWine, whiteWine$quality < 5,select = c("density")),fill = "blue", alpha = 0.2) 
-
-plot9 <- ggplot(whiteWine,aes(x=pH)) + 
-  geom_histogram(data=subset(whiteWine, whiteWine$quality > 7, select = c("pH")),fill = "red", alpha = 0.2) +
-  geom_histogram(data=subset(whiteWine, whiteWine$quality < 5,select = c("pH")),fill = "blue", alpha = 0.2) 
-
-plot10 <- ggplot(whiteWine,aes(x=sulphates)) + 
-  geom_histogram(data=subset(whiteWine, whiteWine$quality > 7, select = c("sulphates")),fill = "red", alpha = 0.2) +
-  geom_histogram(data=subset(whiteWine, whiteWine$quality < 5,select = c("sulphates")),fill = "blue", alpha = 0.2) 
-
-plot11 <- ggplot(whiteWine,aes(x=alcohol)) + 
-  geom_histogram(data=subset(whiteWine, whiteWine$quality > 7, select = c("alcohol")),fill = "red", alpha = 0.2) +
-  geom_histogram(data=subset(whiteWine, whiteWine$quality < 5,select = c("alcohol")),fill = "blue", alpha = 0.2) 
 
 plots <- c()
 for (i in 1:11) {
-  aux <- whiteWine[i,]
   name = names(whiteWine)[i]
-  plot <- ggplot(whiteWine,aes(x=names)) + 
+  plot <- ggplot(whiteWine,aes_q(x=as.name(names(whiteWine)[i]))) + 
     geom_histogram(data=subset(whiteWine, whiteWine$quality > 7, select = c(name)),fill = "red", alpha = 0.2) +
     geom_histogram(data=subset(whiteWine, whiteWine$quality < 5,select = c(name)),fill = "blue", alpha = 0.2)  
-  plots <- c(plots,plot)
+  plots[[i]] <- plot
 }
-plots[1]
-grid.arrange(plots[1])
 
-?grid.arrange
+grid.arrange(plots[[1]],plots[[2]],plots[[3]],plots[[4]],plots[[5]],plots[[6]],plots[[7]],plots[[8]],plots[[9]],plots[[10]],plots[[11]])
+
 
 hist(whiteWine[,6])
 

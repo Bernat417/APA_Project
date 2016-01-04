@@ -26,8 +26,86 @@ c(nrow(subset(whiteWine, whiteWine$quality == 1)),
   nrow(subset(whiteWine, whiteWine$quality == 7)),
   nrow(subset(whiteWine, whiteWine$quality == 8)),
   nrow(subset(whiteWine, whiteWine$quality == 9)),
-  nrow(subset(whiteWine, whiteWine$quality == 10))
-  )
+  nrow(subset(whiteWine, whiteWine$quality == 10))  )
+
+head(subset(whiteWine, whiteWine$quality == 9))
+
+summary(subset(whiteWine))[2,1]
+summary(subset(whiteWine))[5,1]
+
+
+wea<-function(low,top) { 
+
+  result = matrix( 
+       c(0,0,0,0,0,0,0,0,0,0,
+          0,0,0,0,0,0,0,0,0,0,
+          0,0,0,0,0,0,0,0,0,0,
+          0,0,0,0,0,0,0,0,0,0,
+          0,0,0,0,0,0,0,0,0,0,
+          0,0,0,0,0,0,0,0,0,0,
+          0,0,0,0,0,0,0,0,0,0,
+          0,0,0,0,0,0,0,0,0,0,
+          0,0,0,0,0,0,0,0,0,0,
+          0,0,0,0,0,0,0,0,0,0,
+          0,0,0,0,0,0,0,0,0,0), 
+       nrow=11, 
+      ncol=10) 
+  
+  for (i in 1:11) 
+  {
+    topCutoff = as.numeric(quantile( whiteWine[,i],c(top)))
+    lowCutoff = as.numeric(quantile( whiteWine[,i],c(low)))
+    for (j in 1:9)
+    {
+      data=subset(whiteWine, whiteWine$quality == j)
+      if(length(data[,i]) > 0) { 
+        for(k in 1:length(data[,i]))
+        {
+          if(data[k,i] > topCutoff){
+            result[i,j] = result[i,j] + 1
+          }
+          else if(data[k,i] < lowCutoff) {
+            result[i,j] = result[i,j] + 1
+          }
+          result[i,j] = result[i,j]/length(data[,i])
+        }
+        
+      }
+    }
+  }
+  
+  for (i in 1:11) 
+  {
+    for (j in 1:9)
+    {
+      if(result[i,j] < 0.01) {
+        result[i,j] = 0.0
+      } 
+    }
+  }
+  
+  return(result)
+}
+
+
+
+(topCutoff = as.numeric(quantile( whiteWine[,1],c(0.25))))
+(lowCutoff = as.numeric(quantile( whiteWine[,1],c(0.75))))
+summary(whiteWine[,1])
+wea(0.25,0.75)
+
+?quantile
+
+
+for (i in 1:11) {
+  name = names(whiteWine)[i]
+  plot <- ggplot(whiteWine,aes_q(x=as.name(names(whiteWine)[i]))) + 
+    geom_histogram(data=subset(whiteWine, whiteWine$quality > 7, select = c(name)),fill = "red", alpha = 0.2) +
+    geom_histogram(data=subset(whiteWine, whiteWine$quality < 5,select = c(name)),fill = "blue", alpha = 0.2)  
+  plots[[i]] <- plot
+}
+
+
 
 #SUBSET BEST AND WORT
 best = subset(whiteWine, whiteWine$quality > 7)
@@ -73,16 +151,16 @@ plotComparative <- function(i) {
   for (j in 1:11) {
     if (i != j) {
       data=subset(whiteWine, whiteWine$quality >= 5 & whiteWine$quality <= 6)
-      plot(data[,i], data[,j], col = "green", xlim = c(0,max(whiteWine[,i])), ylim = c(0,max(whiteWine[,j])))
+      plot(data[,i], data[,j], col = "yellow", xlim = c(0,max(whiteWine[,i])), ylim = c(0,max(whiteWine[,j])))
       
       data=subset(whiteWine, whiteWine$quality < 2)
-      points(data[,i], data[,j], col = "orange")      
+      points(data[,i], data[,j], col = "red")      
       
       data=subset(whiteWine, whiteWine$quality >= 7 & whiteWine$quality <= 8)
-      points(data[,i], data[,j], col = "brown")
+      points(data[,i], data[,j], col = "green")
       
       data=subset(whiteWine, whiteWine$quality >= 3 & whiteWine$quality <= 4)
-      points(data[,i], data[,j], col = "yellow")
+      points(data[,i], data[,j], col = "orange")
       
       data=subset(whiteWine, whiteWine$quality >= 9)
       points(data[,i], data[,j], col = "blue")
@@ -90,10 +168,10 @@ plotComparative <- function(i) {
   }
 }
 
-plotComparative(1)
+plotComparative(2)
 
-
-dev.off()
+names(data)[3]
+xdev.off()
 par(mfrow = c(1,1))
 data=subset(whiteWine, whiteWine$quality >= 9)
 plot(data$fixed.acidity, data$chlorides, col = "blue", xlim = c(0,max(whiteWine$fixed.acidity)), ylim = c(0,max(whiteWine$chlorides)))

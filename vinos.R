@@ -17,6 +17,17 @@ OutliersB = subset(whiteWine, select = c("free.sulfur.dioxide", "quality" ))
 OutliersB = head(OutliersB[order( OutliersB$quality),],10)
 OutliersB
 
+c(nrow(subset(whiteWine, whiteWine$quality == 1)),
+  nrow(subset(whiteWine, whiteWine$quality == 2)),
+  nrow(subset(whiteWine, whiteWine$quality == 3)),
+  nrow(subset(whiteWine, whiteWine$quality == 4)),
+  nrow(subset(whiteWine, whiteWine$quality == 5)),
+  nrow(subset(whiteWine, whiteWine$quality == 6)),
+  nrow(subset(whiteWine, whiteWine$quality == 7)),
+  nrow(subset(whiteWine, whiteWine$quality == 8)),
+  nrow(subset(whiteWine, whiteWine$quality == 9)),
+  nrow(subset(whiteWine, whiteWine$quality == 10))
+  )
 
 #SUBSET BEST AND WORT
 best = subset(whiteWine, whiteWine$quality > 7)
@@ -56,6 +67,66 @@ for (i in 1:11) {
     geom_histogram(data=subset(whiteWine, whiteWine$quality < 5,select = c(name)),fill = "blue", alpha = 0.2)  
   plots[[i]] <- plot
 }
+
+plotComparative <- function(i) {
+  par(mfrow = c(4,3))
+  for (j in 1:11) {
+    if (i != j) {
+      data=subset(whiteWine, whiteWine$quality >= 5 & whiteWine$quality <= 6)
+      plot(data[,i], data[,j], col = "green", xlim = c(0,max(whiteWine[,i])), ylim = c(0,max(whiteWine[,j])))
+      
+      data=subset(whiteWine, whiteWine$quality < 2)
+      points(data[,i], data[,j], col = "orange")      
+      
+      data=subset(whiteWine, whiteWine$quality >= 7 & whiteWine$quality <= 8)
+      points(data[,i], data[,j], col = "brown")
+      
+      data=subset(whiteWine, whiteWine$quality >= 3 & whiteWine$quality <= 4)
+      points(data[,i], data[,j], col = "yellow")
+      
+      data=subset(whiteWine, whiteWine$quality >= 9)
+      points(data[,i], data[,j], col = "blue")
+    }
+  }
+}
+
+plotComparative(1)
+
+
+dev.off()
+par(mfrow = c(1,1))
+data=subset(whiteWine, whiteWine$quality >= 9)
+plot(data$fixed.acidity, data$chlorides, col = "blue", xlim = c(0,max(whiteWine$fixed.acidity)), ylim = c(0,max(whiteWine$chlorides)))
+
+data=subset(whiteWine, whiteWine$quality >= 7 & whiteWine$quality <= 8)
+points(data$fixed.acidity, data$chlorides, col = "brown")
+
+data=subset(whiteWine, whiteWine$quality >= 5 & whiteWine$quality <= 6)
+points(data$fixed.acidity, data$chlorides, col = "green")
+
+data=subset(whiteWine, whiteWine$quality >= 3 & whiteWine$quality <= 4)
+points(data$fixed.acidity, data$chlorides, col = "yellow")
+
+data=subset(whiteWine, whiteWine$quality < 2)
+points(data$fixed.acidity, data$chlorides, col = "orange")
+
+data=subset(whiteWine, whiteWine$quality < 5)
+points(data$fixed.acidity, data$chlorides, col = "red")
+
+
+
+plot(data$fixed.acidity, data$chlorides, col = "red", xlim = c(0,max(whiteWine$fixed.acidity)), ylim = c(0,max(whiteWine$chlorides)))
+abline(a=0.05,b=0.0)
+abline(v=8)
+data=subset(whiteWine, whiteWine$quality > 4 & whiteWine$quality < 7)
+plot(data$fixed.acidity, data$chlorides, col = "green", xlim = c(0,max(whiteWine$fixed.acidity)), ylim = c(0,max(whiteWine$chlorides)))
+abline(a=0.05,b=0.0)
+data=subset(whiteWine, whiteWine$quality > 5 & whiteWine$quality < 7)
+plot(data$fixed.acidity, data$chlorides, col = "yellow", xlim = c(0,max(whiteWine$fixed.acidity)), ylim = c(0,max(whiteWine$chlorides)))
+abline(a=0.05,b=0.0)
+abline(v=8)
+
+
 
 grid.arrange(plots[[1]],plots[[2]],plots[[3]],plots[[4]],plots[[5]],plots[[6]],plots[[7]],plots[[8]],plots[[9]],plots[[10]],plots[[11]])
 

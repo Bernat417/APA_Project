@@ -36,7 +36,7 @@ summary(subset(whiteWine))[5,1]
 
 wea<-function(low,top) { 
 
-  result = matrix( 
+  result <- matrix( 
        c(0,0,0,0,0,0,0,0,0,0,
           0,0,0,0,0,0,0,0,0,0,
           0,0,0,0,0,0,0,0,0,0,
@@ -50,40 +50,29 @@ wea<-function(low,top) {
           0,0,0,0,0,0,0,0,0,0), 
        nrow=11, 
       ncol=10) 
-  
   for (i in 1:11) 
   {
-    topCutoff = as.numeric(quantile( whiteWine[,i],c(top)))
-    lowCutoff = as.numeric(quantile( whiteWine[,i],c(low)))
+    topCutoff <- as.numeric(quantile( whiteWine[,i],c(top)))
+    lowCutoff <- as.numeric(quantile( whiteWine[,i],c(low)))
+    
     for (j in 1:9)
     {
-      data=subset(whiteWine, whiteWine$quality == j)
-      if(length(data[,i]) > 0) { 
-        for(k in 1:length(data[,i]))
+      data <- subset(whiteWine, whiteWine$quality == j)
+      if(nrow(data) > 0) { 
+        for(k in 1:nrow(data))
         {
           if(data[k,i] > topCutoff){
-            result[i,j] = result[i,j] + 1
+            result[i,j] <- result[i,j] + 1
           }
           else if(data[k,i] < lowCutoff) {
-            result[i,j] = result[i,j] + 1
+            result[i,j] <- result[i,j] + 1
           }
-          result[i,j] = result[i,j]/length(data[,i])
         }
-        
+        result[i,j] <- result[i,j] / nrow(data)
       }
     }
   }
-  
-  for (i in 1:11) 
-  {
-    for (j in 1:9)
-    {
-      if(result[i,j] < 0.01) {
-        result[i,j] = 0.0
-      } 
-    }
-  }
-  
+
   return(result)
 }
 

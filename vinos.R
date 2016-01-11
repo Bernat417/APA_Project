@@ -234,6 +234,45 @@ summary(redWine)
 
 allWine <- rbind(whiteWine,redWine)
 
+attach(whiteWine)
+
+model1 <- glm (quality~., data=whiteWine, family = gaussian)
+
+
+#Plot las clases comparando 2 a 2 las variables
+
+pairs(whiteWine[,c(1:11)], main = "Chemical components in different wine qualities", col = (1:length(levels(as.factor(whiteWine$quality))))[unclass(as.factor(whiteWine$quality))])
+
+summary(subset(whiteWine, whiteWine[,12] == 1)) #no hay
+summary(subset(whiteWine, whiteWine[,12] == 2)) #no hay
+summary(subset(whiteWine, whiteWine[,12] == 3))
+summary(subset(whiteWine, whiteWine[,12] == 4))
+summary(subset(whiteWine, whiteWine[,12] == 5))
+summary(subset(whiteWine, whiteWine[,12] == 6))
+summary(subset(whiteWine, whiteWine[,12] == 7))
+summary(subset(whiteWine, whiteWine[,12] == 8))
+summary(subset(whiteWine, whiteWine[,12] == 9))
 
 
 
+# Comparatica LDA y QDA
+
+learn <- sample(1:nrow(whiteWine), nrow(whiteWine)/10)
+whiteWine.learn <- whiteWine[learn,]
+wihteWine.test <- whiteWine[-learn,]
+
+wine.lda <- lda(quality ~ ., data = whiteWine.learn, CV=TRUE)
+
+predict(wine.lda, whiteWine.learn)$class
+
+predict(mydata.lda, mydata.learn)$posterior
+
+tab <- table(whiteWine$quality[learn], wine.lda$class)  
+(error.LOOCV <- 100*(1-sum(tab[row(tab)==col(tab)])/sum(tab)))
+
+whiteWine.factor <- data.frame(whiteWine[,1:11],as.factor(whiteWine[,12]))
+
+wine.qda <- qda(quality ~ ., prior = c(1,1,1)/3, data = whiteWine.factor, subset=learn, CV=TRUE) 
+
+tab <- table(whiteWine$quality[learn], wine.qda$class)  
+(error.LOOCV <- 100*(1-sum(tab[row(tab)==col(tab)])/sum(tab)))

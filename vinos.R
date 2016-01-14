@@ -1,11 +1,23 @@
 library(ggplot2)
 library(gridExtra)
+library(MASS)
+library(class)
+library(e1071) 
+
 #Read datasets
+
+set.seed(1234)
+
 whiteWine <- read.table(file = "winequality-white.csv", sep = ";", header = TRUE)
 redWine <- read.table(file = "winequality-red.csv", sep = ";", header = TRUE)
 
-na.omit(whiteWine)
-na.omit(redWine)
+learn <- sample(1:nrow(whiteWine), nrow(whiteWine)/10)
+whiteWine.learn <- whiteWine[learn,]
+whiteWine.test <- whiteWine[-learn,]
+
+#si no lo marcas como NA no hace nada
+#na.omit(whiteWine)
+#na.omit(redWine)
 
 summary(whiteWine)
 
@@ -257,22 +269,60 @@ summary(subset(whiteWine, whiteWine[,12] == 9))
 
 # Comparatica LDA y QDA
 
-learn <- sample(1:nrow(whiteWine), nrow(whiteWine)/10)
-whiteWine.learn <- whiteWine[learn,]
-wihteWine.test <- whiteWine[-learn,]
-
-wine.lda <- lda(quality ~ ., data = whiteWine.learn, CV=TRUE)
+wine.lda <- lda(quality ~ ., data = whiteWine.learn)
 
 predict(wine.lda, whiteWine.learn)$class
 
-predict(mydata.lda, mydata.learn)$posterior
+predict(wine.lda, whiteWine.learn)$posterior
 
-tab <- table(whiteWine$quality[learn], wine.lda$class)  
+wine.lda.cv <- lda(quality ~ ., data = whiteWine.learn, CV=TRUE)
+
+tab <- table(whiteWine.learn$quality, wine.lda.cv$class)  
 (error.LOOCV <- 100*(1-sum(tab[row(tab)==col(tab)])/sum(tab)))
 
 whiteWine.factor <- data.frame(whiteWine[,1:11],as.factor(whiteWine[,12]))
 
-wine.qda <- qda(quality ~ ., prior = c(1,1,1)/3, data = whiteWine.factor, subset=learn, CV=TRUE) 
+wine.qda <- qda(quality ~ ., prior = c(1,1,1)/3, data = whiteWine.learn , CV=TRUE) 
 
 tab <- table(whiteWine$quality[learn], wine.qda$class)  
 (error.LOOCV <- 100*(1-sum(tab[row(tab)==col(tab)])/sum(tab)))
+
+hist(log10(whiteWine$citric.acid))
+
+
+
+
+# K-nearest neighbors
+
+whiteWine.learn.input <- whiteWine.learn[,1:11]
+whiteWine.learn.classes <- as.factor(whiteWine.learn[,12])
+
+whiteWine.test.input <- whiteWine.test[,1:11]
+whiteWine.test.classes <- as.factor(whiteWine.test[,12])
+
+neighbours <- c(1:10)
+errors <- matrix (nrow=length(neighbours), ncol=2)
+colnames(errors) <- c("k","LOOCV error")
+
+for (k in neighbours)
+{
+  myknn.cv <- knn.cv (whiteWine.learn.input, whiteWine.learn.classes, k = neighbours[k])
+  
+  # fill in no. of neighbours and LOO validation error
+  errors[k, "k"] <- neighbours[k]
+  
+  tab <- table(myknn.cv, whiteWine.learn.classes)
+  errors[k, "LOOCV error"] <- 1 - sum(tab[row(tab)==col(tab)])/sum(tab)
+}
+
+errors
+
+# todos estan muy cerca pero parece que k=4 es el mejor valor con 0.52
+
+myknn <- knn (whiteWine.learn.input, whiteWine.test.input, whiteWine.learn.classes, k = 4, prob=TRUE) 
+
+
+tab <- table(myknn, whiteWine.test.classes) 
+tab
+1 - sum(tab[row(tab)==col(tab)])/sum(tab)
+

@@ -112,6 +112,8 @@ skewness(whiteWine$alcohol)
 skewness(log(whiteWine$alcohol))
 whiteWine$alcohol <- log(whiteWine$alcohol)
 
+#Buscar correlacion entre la calidad y las variables
+
 
 badWine <- subset(whiteWine[-12], whiteWine$quality < 6)
 badWine$quality <- as.factor("bad")  
@@ -129,9 +131,9 @@ table(whiteWine.3$quality)
 
 #Separamos un set de entramiento y un set de test
 
-learn <- sample(1:nrow(whiteWine.3), nrow(whiteWine.3)/10)
-whiteWine.3.learn <- whiteWine.3[learn,]
-whiteWine.3.test <- whiteWine.3[-learn,]
+test <- sample(1:nrow(whiteWine.3), nrow(whiteWine.3)/10)
+whiteWine.3.learn <- whiteWine.3[-test,]
+whiteWine.3.test <- whiteWine.3[test,]
 
 whiteWine.3.learn.input <- whiteWine.3.learn[,1:11]
 whiteWine.3.learn.classes <- whiteWine.3.learn[,12]
@@ -181,8 +183,107 @@ wine.lda.cv <- lda(quality ~ ., data = whiteWine.3.learn, CV=TRUE)
 tab <- table(whiteWine.3.learn$quality, wine.lda.cv$class)  
 (error.LOOCV <- 100*(1-sum(tab[row(tab)==col(tab)])/sum(tab)))
 
-
 wine.qda <- qda(quality ~ ., prior = c(1,1,1)/3, data = whiteWine.3.learn , CV=TRUE) 
 
 tab <- table(whiteWine.3$quality[learn], wine.qda$class)  
 (error.LOOCV <- 100*(1-sum(tab[row(tab)==col(tab)])/sum(tab)))
+
+
+# Random forest
+
+#Random forest
+
+
+model.rf1 <- randomForest(quality ~ ., data = whiteWine.3.learn, ntree=100, proximity=FALSE)
+
+model.rf1
+
+pred.rf1 <- predict (model.rf1, whiteWine.3.test, type="class")
+
+(ct <- table(Truth=whiteWine.3.test$quality, Pred=pred.rf1))
+
+# percent by class
+prop.table(ct, 1)
+# total percent correct
+sum(diag(ct))/sum(ct)
+
+# real test error is 
+
+round(100*(1-sum(diag(ct))/sum(ct)),2)
+
+(F1 <- harm (prop.table(ct,1)[1,1], prop.table(ct,1)[2,2]))
+
+#Pesos
+
+model.rf2 <- randomForest(quality ~ ., data = whiteWine.3.learn, ntree=100, proximity=FALSE,classwt=c(1,10,20))
+
+model.rf2
+
+pred.rf2 <- predict (model.rf2, whiteWine.3.test, type="class")
+
+(ct <- table(Truth=whiteWine.3.test$quality, Pred=pred.rf2))
+
+# percent by class
+prop.table(ct, 1)
+# total percent correct
+sum(diag(ct))/sum(ct)
+
+# real test error is 
+
+round(100*(1-sum(diag(ct))/sum(ct)),2)
+
+(F1 <- harm (prop.table(ct,1)[1,1], prop.table(ct,1)[2,2]))
+
+# sampling
+
+## Now we can try to optimize the number of trees, guided by OOB:
+
+(ntrees <- round(10^seq(1,3,by=0.2)))
+
+# prepare the structure to store the partial results
+
+rf.results <- matrix (rep(0,2*length(ntrees)),nrow=length(ntrees))
+colnames (rf.results) <- c("ntrees", "OOB")
+rf.results[,"ntrees"] <- ntrees
+rf.results[,"OOB"] <- 0
+
+ii <- 1
+
+for (nt in ntrees)
+{ 
+  print(nt)
+  
+  model.rf <- randomForest(quality ~ ., data = whiteWine.3.learn, ntree=nt, proximity=FALSE, 
+                           sampsize=c(bad=800, normal=800, good=800))
+  
+  # get the OOB
+  rf.results[ii,"OOB"] <- model.rf$err.rate[nt,1]
+  
+  ii <- ii+1
+}
+
+rf.results
+
+# choose best value of 'ntrees'
+
+lowest.OOB.error <- as.integer(which.min(rf.results[,"OOB"]))
+(ntrees.best <- rf.results[lowest.OOB.error,"ntrees"])
+
+
+model.rf <- randomForest(quality ~ ., data = whiteWine.3.learn, ntree=ntrees.best, proximity=FALSE, 
+                         sampsize=c(bad=800, normal=800, good=800))
+
+pred.rf.final <- predict (model.rf, whiteWine.3.test, type="class")
+
+(ct <- table(Truth=whiteWine.3.test$quality, Pred=pred.rf.final))
+
+# percent by class
+prop.table(ct, 1)
+# total percent correct
+sum(diag(ct))/sum(ct)
+
+# real test error is 
+
+round(100*(1-sum(diag(ct))/sum(ct)),2)
+
+(F1 <- harm (prop.table(ct,1)[1,1], prop.table(ct,1)[2,2]))

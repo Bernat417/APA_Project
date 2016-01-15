@@ -2,7 +2,7 @@ library(ggplot2)
 library(gridExtra)
 library(MASS)
 library(class)
-library(e1071) 
+library(e1071)
 library(nnet)
 library(caret)
 library(randomForest)
@@ -16,9 +16,9 @@ set.seed(1234)
 whiteWine <- read.table(file = "winequality-white.csv", sep = ";", header = TRUE)
 redWine <- read.table(file = "winequality-red.csv", sep = ";", header = TRUE)
 
-learn <- sample(1:nrow(whiteWine), nrow(whiteWine)/10)
-whiteWine.learn <- whiteWine[learn,]
-whiteWine.test <- whiteWine[-learn,]
+test <- sample(1:nrow(whiteWine), nrow(whiteWine)/10)
+whiteWine.learn <- whiteWine[-test,]
+whiteWine.test <- whiteWine[test,]
 
 #si no lo marcas como NA no hace nada
 #na.omit(whiteWine)
@@ -51,9 +51,9 @@ summary(subset(whiteWine))[2,1]
 summary(subset(whiteWine))[5,1]
 
 
-wea<-function(low,top) { 
+wea<-function(low,top) {
 
-  result <- matrix( 
+  result <- matrix(
        c(0,0,0,0,0,0,0,0,0,0,
           0,0,0,0,0,0,0,0,0,0,
           0,0,0,0,0,0,0,0,0,0,
@@ -64,18 +64,18 @@ wea<-function(low,top) {
           0,0,0,0,0,0,0,0,0,0,
           0,0,0,0,0,0,0,0,0,0,
           0,0,0,0,0,0,0,0,0,0,
-          0,0,0,0,0,0,0,0,0,0), 
-       nrow=11, 
-      ncol=10) 
-  for (i in 1:11) 
+          0,0,0,0,0,0,0,0,0,0),
+       nrow=11,
+      ncol=10)
+  for (i in 1:11)
   {
     topCutoff <- as.numeric(quantile( whiteWine[,i],c(top)))
     lowCutoff <- as.numeric(quantile( whiteWine[,i],c(low)))
-    
+
     for (j in 1:9)
     {
       data <- subset(whiteWine, whiteWine$quality == j)
-      if(nrow(data) > 0) { 
+      if(nrow(data) > 0) {
         for(k in 1:nrow(data))
         {
           if(data[k,i] > topCutoff){
@@ -105,9 +105,9 @@ wea(0.25,0.75)
 
 for (i in 1:11) {
   name = names(whiteWine)[i]
-  plot <- ggplot(whiteWine,aes_q(x=as.name(names(whiteWine)[i]))) + 
+  plot <- ggplot(whiteWine,aes_q(x=as.name(names(whiteWine)[i]))) +
     geom_histogram(data=subset(whiteWine, whiteWine$quality > 7, select = c(name)),fill = "red", alpha = 0.2) +
-    geom_histogram(data=subset(whiteWine, whiteWine$quality < 5,select = c(name)),fill = "blue", alpha = 0.2)  
+    geom_histogram(data=subset(whiteWine, whiteWine$quality < 5,select = c(name)),fill = "blue", alpha = 0.2)
   plots[[i]] <- plot
 }
 
@@ -146,9 +146,9 @@ require(gridExtra)
 plots <- c()
 for (i in 1:11) {
   name = names(whiteWine)[i]
-  plot <- ggplot(whiteWine,aes_q(x=as.name(names(whiteWine)[i]))) + 
+  plot <- ggplot(whiteWine,aes_q(x=as.name(names(whiteWine)[i]))) +
     geom_histogram(data=subset(whiteWine, whiteWine$quality > 7, select = c(name)),fill = "red", alpha = 0.2) +
-    geom_histogram(data=subset(whiteWine, whiteWine$quality < 5,select = c(name)),fill = "blue", alpha = 0.2)  
+    geom_histogram(data=subset(whiteWine, whiteWine$quality < 5,select = c(name)),fill = "blue", alpha = 0.2)
   plots[[i]] <- plot
 }
 
@@ -158,16 +158,16 @@ plotComparative <- function(i) {
     if (i != j) {
       data=subset(whiteWine, whiteWine$quality >= 5 & whiteWine$quality <= 6)
       plot(data[,i], data[,j], col = "yellow", xlim = c(0,max(whiteWine[,i])), ylim = c(0,max(whiteWine[,j])))
-      
+
       data=subset(whiteWine, whiteWine$quality < 2)
-      points(data[,i], data[,j], col = "red")      
-      
+      points(data[,i], data[,j], col = "red")
+
       data=subset(whiteWine, whiteWine$quality >= 7 & whiteWine$quality <= 8)
       points(data[,i], data[,j], col = "green")
-      
+
       data=subset(whiteWine, whiteWine$quality >= 3 & whiteWine$quality <= 4)
       points(data[,i], data[,j], col = "orange")
-      
+
       data=subset(whiteWine, whiteWine$quality >= 9)
       points(data[,i], data[,j], col = "blue")
     }
@@ -226,7 +226,7 @@ table(whiteWine[,6] == 0)  # free.sulfur.dioxide
 table(whiteWine[,7] == 0)  # total.sulfur.dioxide
 table(whiteWine[,8] == 0)  # density
 table(whiteWine[,9] == 0)  # pH
-table(whiteWine[,10] == 0) # sulphates 
+table(whiteWine[,10] == 0) # sulphates
 table(whiteWine[,11] == 0) # alcohol
 table(whiteWine[,12] == 0) # quality
 
@@ -243,7 +243,7 @@ table(redWine[,6] == 0)  # free.sulfur.dioxide
 table(redWine[,7] == 0)  # total.sulfur.dioxide
 table(redWine[,8] == 0)  # density
 table(redWine[,9] == 0)  # pH
-table(redWine[,10] == 0) # sulphates 
+table(redWine[,10] == 0) # sulphates
 table(redWine[,11] == 0) # alcohol
 table(redWine[,12] == 0) # quality
 
@@ -282,14 +282,14 @@ predict(wine.lda, whiteWine.learn)$posterior
 
 wine.lda.cv <- lda(quality ~ ., data = whiteWine.learn, CV=TRUE)
 
-tab <- table(whiteWine.learn$quality, wine.lda.cv$class)  
+tab <- table(whiteWine.learn$quality, wine.lda.cv$class)
 (error.LOOCV <- 100*(1-sum(tab[row(tab)==col(tab)])/sum(tab)))
 
 whiteWine.factor <- data.frame(whiteWine[,1:11],as.factor(whiteWine[,12]))
 
-wine.qda <- qda(quality ~ ., prior = c(1,1,1)/3, data = whiteWine.learn , CV=TRUE) 
+wine.qda <- qda(quality ~ ., prior = c(1,1,1)/3, data = whiteWine.learn , CV=TRUE)
 
-tab <- table(whiteWine$quality[learn], wine.qda$class)  
+tab <- table(whiteWine$quality[learn], wine.qda$class)
 (error.LOOCV <- 100*(1-sum(tab[row(tab)==col(tab)])/sum(tab)))
 
 hist(log10(whiteWine$citric.acid))
@@ -312,10 +312,10 @@ colnames(errors) <- c("k","LOOCV error")
 for (k in neighbours)
 {
   myknn.cv <- knn.cv (whiteWine.learn.input, whiteWine.learn.classes, k = neighbours[k])
-  
+
   # fill in no. of neighbours and LOO validation error
   errors[k, "k"] <- neighbours[k]
-  
+
   tab <- table(myknn.cv, whiteWine.learn.classes)
   errors[k, "LOOCV error"] <- 1 - sum(tab[row(tab)==col(tab)])/sum(tab)
 }
@@ -324,10 +324,10 @@ errors
 
 # todos estan muy cerca pero parece que k=4 es el mejor valor con 0.52
 
-myknn <- knn (whiteWine.learn.input, whiteWine.test.input, whiteWine.learn.classes, k = 4, prob=TRUE) 
+myknn <- knn (whiteWine.learn.input, whiteWine.test.input, whiteWine.learn.classes, k = 4, prob=TRUE)
 
 
-tab <- table(myknn, whiteWine.test.classes) 
+tab <- table(myknn, whiteWine.test.classes)
 tab
 1 - sum(tab[row(tab)==col(tab)])/sum(tab)
 
@@ -345,7 +345,7 @@ whiteWine.test$quality <- as.factor(whiteWine.test$quality)
 model.nnet <- nnet(quality ~., data = whiteWine.learn, size=20, maxit=200, decay=0.01)
 
 ## Take your time to understand the output
-model.nnet 
+model.nnet
 model.nnet$value
 model.nnet$fitted.values
 model.nnet$wts
@@ -406,7 +406,7 @@ prop.table(ct, 1)
 # total percent correct
 sum(diag(ct))/sum(ct)
 
-# real test error is 
+# real test error is
 
 round(100*(1-sum(diag(ct))/sum(ct)),2)
 
@@ -427,7 +427,7 @@ prop.table(ct, 1)
 # total percent correct
 sum(diag(ct))/sum(ct)
 
-# real test error is 
+# real test error is
 
 round(100*(1-sum(diag(ct))/sum(ct)),2)
 
@@ -436,7 +436,7 @@ round(100*(1-sum(diag(ct))/sum(ct)),2)
 
 #stratify the boosting resamples
 
-model.rf3 <- randomForest(quality ~ ., data = whiteWine.learn, ntree=100, proximity=FALSE, 
+model.rf3 <- randomForest(quality ~ ., data = whiteWine.learn, ntree=100, proximity=FALSE,
                           sampsize=c('3' = 1, '4' = 1, '5' = 1, '6' = 1, '7' = 1, '8' = 1), strata=whiteWine.learn$quality)
 
 model.rf3
@@ -450,7 +450,7 @@ prop.table(ct, 1)
 # total percent correct
 sum(diag(ct))/sum(ct)
 
-# real test error is 
+# real test error is
 
 round(100*(1-sum(diag(ct))/sum(ct)),2)
 

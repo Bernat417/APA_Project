@@ -3,8 +3,13 @@ library(gridExtra)
 library(MASS)
 library(class)
 library(e1071) 
+library(nnet)
+library(caret)
+library(randomForest)
 
-#Read datasets
+harm <- function (a,b) { 2/(1/a+1/b) }
+
+#Read dataset
 
 set.seed(1234)
 
@@ -326,3 +331,129 @@ tab <- table(myknn, whiteWine.test.classes)
 tab
 1 - sum(tab[row(tab)==col(tab)])/sum(tab)
 
+
+#MLP
+
+for(i in seq(1:11)) {
+  whiteWine.learn[,i] <- scale(whiteWine.learn[,i])
+  whiteWine.test[,i] <- scale(whiteWine.test[,i])
+}
+
+whiteWine.learn$quality <- as.factor(whiteWine.learn$quality)
+whiteWine.test$quality <- as.factor(whiteWine.test$quality)
+
+model.nnet <- nnet(quality ~., data = whiteWine.learn, size=20, maxit=200, decay=0.01)
+
+## Take your time to understand the output
+model.nnet 
+model.nnet$value
+model.nnet$fitted.values
+model.nnet$wts
+summary(model.nnet)
+
+
+p1 <- as.factor(predict (model.nnet, type="class"))
+
+t1 <- table(p1,whiteWine.learn$quality)
+error_rate.learn <- 100*(1-sum(diag(t1))/nrow(whiteWine.learn))
+error_rate.learn
+
+p2 <- as.factor(predict (model.nnet, newdata=whiteWine.test, type="class"))
+
+t2 <- table(p2,whiteWine.test$quality)
+error_rate.test <- 100*(1-sum(diag(t2))/nrow(whiteWine.test))
+error_rate.test
+
+#Cross validation MLP
+
+#Variando el numero de neuronas
+sizes <- 2*seq(1,10,by=1)
+
+trc <- trainControl (method="repeatedcv", number=10, repeats=10)
+model.10x10CV <- train (quality ~., data = whiteWine.learn, method='nnet', maxit = 500, trace = FALSE,
+                        tuneGrid = expand.grid(.size=sizes,.decay=0), trControl=trc)
+
+model.10x10CV$results
+
+## and the best model found
+model.10x10CV$bestTune
+
+#Variando el parametro decay
+decays <- 10^seq(-3,0,by=1)
+
+model.10x10CV <- train (quality ~., data = whiteWine.learn, method='nnet', maxit = 500, trace = FALSE,
+                        tuneGrid = expand.grid(.size=20,.decay=decays), trControl=trc)
+
+model.10x10CV$results
+
+## and the best model found
+model.10x10CV$bestTune
+
+
+#Random forest
+
+
+model.rf1 <- randomForest(quality ~ ., data = whiteWine.learn, ntree=100, proximity=FALSE)
+
+model.rf1
+
+pred.rf1 <- predict (model.rf1, whiteWine.test, type="class")
+
+(ct <- table(Truth=whiteWine.test$quality, Pred=pred.rf1))
+
+# percent by class
+prop.table(ct, 1)
+# total percent correct
+sum(diag(ct))/sum(ct)
+
+# real test error is 
+
+round(100*(1-sum(diag(ct))/sum(ct)),2)
+
+(F1 <- harm (prop.table(ct,1)[1,1], prop.table(ct,1)[2,2]))
+
+#Pesos
+
+model.rf2 <- randomForest(quality ~ ., data = whiteWine.learn, ntree=100, proximity=FALSE,classwt=c(1,2,3,4,5,6))
+
+model.rf2
+
+pred.rf2 <- predict (model.rf2, whiteWine.test, type="class")
+
+(ct <- table(Truth=whiteWine.test$quality, Pred=pred.rf2))
+
+# percent by class
+prop.table(ct, 1)
+# total percent correct
+sum(diag(ct))/sum(ct)
+
+# real test error is 
+
+round(100*(1-sum(diag(ct))/sum(ct)),2)
+
+(F1 <- harm (prop.table(ct,1)[1,1], prop.table(ct,1)[2,2]))
+
+
+#stratify the boosting resamples
+
+model.rf3 <- randomForest(quality ~ ., data = whiteWine.learn, ntree=100, proximity=FALSE, 
+                          sampsize=c('3' = 1, '4' = 1, '5' = 1, '6' = 1, '7' = 1, '8' = 1), strata=whiteWine.learn$quality)
+
+model.rf3
+
+pred.rf3 <- predict (model.rf3, whiteWine.test, type="class")
+
+(ct <- table(Truth=whiteWine.test$quality, Pred=pred.rf3))
+
+# percent by class
+prop.table(ct, 1)
+# total percent correct
+sum(diag(ct))/sum(ct)
+
+# real test error is 
+
+round(100*(1-sum(diag(ct))/sum(ct)),2)
+
+(F1 <- harm (prop.table(ct,1)[1,1], prop.table(ct,1)[2,2]))
+
+importance(model.rf3)

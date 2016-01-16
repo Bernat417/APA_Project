@@ -297,13 +297,12 @@ error_rate.test
 
 #SVM con kernel RBF
 
+obj <- tune.svm(quality~., data = whiteWine.3.learn, gamma =
+                  seq(.5, .9, by = .1), cost = seq(1,100, by = 10))
 
-(model <- svm(whiteWine.3.learn.input, whiteWine.3.learn.classes, type="C-classification", cost=0.5, kernel="radial", scale = FALSE))
+(model <- svm(whiteWine.3.learn.input, whiteWine.3.learn.classes, type="C-classification", cost=31, gamma=0.8, kernel="radial", scale = FALSE))
 pred.svm <- predict(model,whiteWine.3.test.input)
 
-t1 <- table(pred=pred.svm,truth=whiteWine.test$quality)
-error_rate.test <- 100*(1-sum(diag(t2))/nrow(whiteWine.test))
+t1 <- table(pred=pred.svm,truth=whiteWine.3.test$quality)
+error_rate.test <- 100*(1-sum(diag(t1))/nrow(whiteWine.3.test))
 error_rate.test
-
-obj <- tune.svm(quality~., data = whiteWine.learn, gamma =
-                  seq(.5, .9, by = .1), cost = seq(100,1000, by = 100))

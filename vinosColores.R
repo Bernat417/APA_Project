@@ -21,8 +21,10 @@ redWine$color <- as.factor('r')
 summary(whiteWine)
 summary(redWine)
 
-wine <- rbind(wine, redWine)
-wine <- na.omit(wine)
+wine <- rbind(whiteWine, redWine)
+summary(wine)
+
+#wine <- na.omit(wine)
 table(wine$quality)
 
 #Tratar outlayers
@@ -173,3 +175,26 @@ for (k in neighbours)
 
 errors
 
+# todos estan muy cerca pero parece que k=1 es el mejor valor con 0.39
+
+myknn <- knn (wine.learn.input, wine.test.input, wine.learn.classes, k = 1, prob=TRUE) 
+
+
+tab
+(error <- 1 - sum(tab[row(tab)==col(tab)])/sum(tab))
+
+
+#LDA
+
+
+
+wine.lda.cv <- lda(quality ~ ., data = wine.learn, CV=TRUE)
+
+tab <- table(wine.learn$quality, wine.lda.cv$class)  
+(error.LOOCV <- 100*(1-sum(tab[row(tab)==col(tab)])/sum(tab)))
+
+wine.lda <- lda(quality ~ ., data = wine.learn)
+
+lda.predictions <- predict(wine.lda, wine.test)
+tab <- table(wine.test$quality, lda.predictions$class)  
+(error.TE <- 100*(1-sum(tab[row(tab)==col(tab)])/sum(tab)))

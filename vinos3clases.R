@@ -238,7 +238,6 @@ for (nt in ntrees)
 rf.results
 
 
-
 lowest.OOB.error <- as.integer(which.min(rf.results[,"OOB"]))
 (ntrees.best <- rf.results[lowest.OOB.error,"ntrees"])
 
@@ -260,6 +259,23 @@ prop.table(ct, 1)
 
 (F1 <- harm (prop.table(ct,1)[1,1], prop.table(ct,1)[2,2]))
 
+importance(model.rf)
+
+model.rf <- randomForest(quality ~ alcohol + density + volatile.acidity + residual.sugar + chlorides + free.sulfur.dioxide +total.sulfur.dioxide + pH - fixed.acidity - sulphates, 
+                         data = whiteWine.3.learn, ntree=ntrees.best, proximity=FALSE, 
+                         sampsize=c(bad=800, normal=800, good=800))
+
+pred.rf.final <- predict (model.rf, whiteWine.3.test, type="class")
+
+(ct <- table(Truth=whiteWine.3.test$quality, Pred=pred.rf.final))
+
+
+prop.table(ct, 1)
+
+(acierto <- sum(diag(ct))/sum(ct))
+
+
+(per.error <- round(100*(1-sum(diag(ct))/sum(ct)),2))
 
 #MLP
 

@@ -214,6 +214,7 @@ tab <- table(whiteWine.3$quality[learn], wine.qda$class)
 
 (ntrees <- round(10^seq(1,3,by=0.2)))
 
+model.rf.cv <- tuneRF(whiteWine.3.learn.input, whiteWine.3.learn.classes, stepFactor=1.5)
 
 rf.results <- matrix (rep(0,2*length(ntrees)),nrow=length(ntrees))
 colnames (rf.results) <- c("ntrees", "OOB")
@@ -227,7 +228,7 @@ for (nt in ntrees)
   print(nt)
   
   model.rf <- randomForest(quality ~ ., data = whiteWine.3.learn, ntree=nt, proximity=FALSE, 
-                           sampsize=c(bad=800, normal=800, good=800))
+                           sampsize=c(bad=800, normal=800, good=800), mtry=3)
   
   # get the OOB
   rf.results[ii,"OOB"] <- model.rf$err.rate[nt,1]
@@ -243,7 +244,7 @@ lowest.OOB.error <- as.integer(which.min(rf.results[,"OOB"]))
 
 
 model.rf <- randomForest(quality ~ ., data = whiteWine.3.learn, ntree=ntrees.best, proximity=FALSE, 
-                         sampsize=c(bad=800, normal=800, good=800))
+                         sampsize=c(bad=800, normal=800, good=800), mtry=3)
 
 pred.rf.final <- predict (model.rf, whiteWine.3.test, type="class")
 
@@ -261,9 +262,10 @@ prop.table(ct, 1)
 
 importance(model.rf)
 
+
 model.rf <- randomForest(quality ~ alcohol + density + volatile.acidity + residual.sugar + chlorides + free.sulfur.dioxide +total.sulfur.dioxide + pH - fixed.acidity - sulphates, 
                          data = whiteWine.3.learn, ntree=ntrees.best, proximity=FALSE, 
-                         sampsize=c(bad=800, normal=800, good=800))
+                         sampsize=c(bad=800, normal=800, good=800), mtry = 3)
 
 pred.rf.final <- predict (model.rf, whiteWine.3.test, type="class")
 

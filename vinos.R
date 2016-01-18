@@ -74,8 +74,10 @@ hist(whiteWine$residual.sugar)
 hist(log(whiteWine$residual.sugar))
 skewness(whiteWine$residual.sugar)
 skewness(log(whiteWine$residual.sugar))
-whiteWine$residual.sugar <- log(whiteWine$residual.sugar) 
 kurtosis(whiteWine$residual.sugar)
+kurtosis(log(whiteWine$residual.sugar))
+whiteWine$residual.sugar <- log(whiteWine$residual.sugar) 
+
 
 #chlorides. Parece correcto
 hist(whiteWine$chlorides)
@@ -118,6 +120,7 @@ hist(log(whiteWine$sulphates))
 skewness(whiteWine$sulphates)
 skewness(log(whiteWine$sulphates))
 kurtosis(whiteWine$sulphates)
+kurtosis(log(whiteWine$sulphates))
 whiteWine$sulphates <- log(whiteWine$sulphates)
 
 #alcohol
@@ -126,6 +129,7 @@ hist(log(whiteWine$alcohol))
 skewness(whiteWine$alcohol)
 skewness(log(whiteWine$alcohol))
 kurtosis(whiteWine$alcohol)
+kurtosis(log(whiteWine$alcohol))
 whiteWine$alcohol <- log(whiteWine$alcohol)
 
 #Buscar correlacion entre la calidad y las variables
@@ -156,17 +160,14 @@ whiteWine.test.classes <- whiteWine.test[,12]
 
 # K-nearest neighbors
 
-neighbours <- c(1:20)
+neighbours <- c(1:30)
 errors <- matrix (nrow=length(neighbours), ncol=2)
 colnames(errors) <- c("k","LOOCV error")
 
 for (k in neighbours)
 {
   myknn.cv <- knn.cv (whiteWine.learn.input, whiteWine.learn.classes, k = neighbours[k])
-  
-  # fill in no. of neighbours and LOO validation error
   errors[k, "k"] <- neighbours[k]
-  
   tab <- table(myknn.cv, whiteWine.learn.classes)
   errors[k, "LOOCV error"] <- 1 - sum(tab[row(tab)==col(tab)])/sum(tab)
 }
@@ -177,7 +178,6 @@ errors
 
 myknn <- knn (whiteWine.learn.input, whiteWine.test.input, whiteWine.learn.classes, k = 1, prob=TRUE) 
 
-
 tab <- table(myknn, whiteWine.test.classes) 
 tab
 (error <- 1 - sum(tab[row(tab)==col(tab)])/sum(tab))
@@ -185,25 +185,51 @@ tab
 
 #LDA
 
-wine.lda <- lda(quality ~ ., data = whiteWine.learn)
-
-predict(wine.lda, whiteWine.learn)$class
-
-predict(wine.lda, whiteWine.learn)$posterior
-
 wine.lda.cv <- lda(quality ~ ., data = whiteWine.learn, CV=TRUE)
 
 tab <- table(whiteWine.learn$quality, wine.lda.cv$class)  
 (error.LOOCV <- 100*(1-sum(tab[row(tab)==col(tab)])/sum(tab)))
 
-wine.qda <- qda(quality ~ ., prior = c(1,1,1)/3, data = whiteWine.learn , CV=TRUE) 
+model.lda <- lda(quality ~ ., data = whiteWine.learn)
 
-tab <- table(whiteWine.learn$quality, wine.qda$class)  
-(error.LOOCV <- 100*(1-sum(tab[row(tab)==col(tab)])/sum(tab)))
+lda.predictions <- predict(model.lda, whiteWine.test)
+lda.predictions$class
 
+
+tab <- table(whiteWine.test$quality, lda.predictions$class)  
+tab
+error <- 100*(1-sum(tab[row(tab)==col(tab)])/sum(tab))
+error
+
+#SVM con kernel RBF
+
+obj <- tune.svm(quality~., data = whiteWine.learn, gamma =
+                  seq(.5, .9, by = .1), cost = seq(1,100, by = 10))
+
+(model.svm <- svm(whiteWine.learn.input, whiteWine.learn.classes, type="C-classification", cost=21, gamma=0.5, kernel="radial", scale = FALSE, tolerance=0.5))
+pred.svm <- predict(model.svm,whiteWine.test.input)
+
+
+t1 <- table(pred=pred.svm,truth=whiteWine.test$quality)
+t1
+error_rate.test <- 100*(1-sum(diag(t1))/nrow(whiteWine.test))
+error_rate.test
+
+
+
+pred.svm <- predict(model,whiteWine[,1:11])
+
+t1 <- table(pred=pred.svm,truth=whiteWine[,12])
+t1
+error_rate.test <- 100*(1-sum(diag(t1))/nrow(whiteWine))
+error_rate.test
 
 
 # Random forest
+
+model.rf.cv <- rfcv(whiteWine.learn.input, whiteWine.learn.classes, cv.fold=10)
+
+model.rf.cv$error.cv
 
 (ntrees <- round(10^seq(1,3,by=0.2)))
 
@@ -249,7 +275,10 @@ prop.table(ct, 1)
 
 (per.error <- round(100*(1-sum(diag(ct))/sum(ct)),2))
 
-(F1 <- harm (prop.table(ct,1)[1,1], prop.table(ct,1)[2,2]))
+importance(model.rf)
+
+#Alcohol y density son las variables con mas importancia ( tambien son las variables con mayor correlacion con la calidad)
+#pero ninguna parece tener mucha menos importancia  que las demas.
 
 #MLP
 
@@ -264,13 +293,9 @@ decays <- 10^seq(-3,0,by=1)
 model.nnet <- train (quality ~., data = whiteWine.learn, method='nnet', maxit = 200, trace = FALSE,
                      tuneGrid = expand.grid(.size=10,.decay=decays), trControl=trc)
 
-## Take your time to understand the output
-model.nnet
-model.nnet$value
-model.nnet$fitted.values
-model.nnet$wts
-summary(model.nnet)
+#El mejor valor de decay es 0.01
 
+model.nnet <- nnet(quality ~., data = whiteWine.learn, size=50, maxit=500, decay=0.01)
 
 p1 <- as.factor(predict (model.nnet, type="class"))
 

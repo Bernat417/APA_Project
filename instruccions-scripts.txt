@@ -1,0 +1,36 @@
+*************************************************
+*   APA. Predicció de la qualitat del vi        *
+*            Carlos Escolano                    *
+*            Bernat Huguet                      *
+*************************************************
+
+En el nostre projecte fem servir les llibreries de R:
+
+* ggplot2
+* gridExtra
+* MASS
+* class
+* e1071
+* nnet
+* caret
+* randomForest
+
+Per executar els scripts correctament cal que els datasets es trobin al mateix
+directori que ells.
+
+DataSet vi blanc:
+DataSet vi negre:
+Script amb la classificació original: vinos.R
+Script amb la classificació proposada: vinos3classes.R
+
+Cadascun dels scripts realitza els experiments per una de les classificacions.
+Estan organitzats en la estructura:
+
+ * Tractament de les dades
+ * Experiment amb KNN
+ * Experiment LDA/QDA
+ * SVM amb kernel RBF
+ * Random Forest
+ * MLP
+
+Per obtenir els resultats només cal executar-los linealment desde el principi.

@@ -171,10 +171,7 @@ colnames(errors) <- c("k","LOOCV error")
 for (k in neighbours)
 {
   myknn.cv <- knn.cv (whiteWine.3.learn.input, whiteWine.3.learn.classes, k = neighbours[k])
-  
-  # fill in no. of neighbours and LOO validation error
   errors[k, "k"] <- neighbours[k]
-  
   tab <- table(myknn.cv, whiteWine.3.learn.classes)
   errors[k, "LOOCV error"] <- 1 - sum(tab[row(tab)==col(tab)])/sum(tab)
 }
@@ -193,11 +190,6 @@ tab
 
 #LDA
 
-wine.lda <- lda(quality ~ ., data = whiteWine.3.learn)
-
-predict(wine.lda, whiteWine.3.learn)$class
-
-predict(wine.lda, whiteWine.3.learn)$posterior
 
 wine.lda.cv <- lda(quality ~ ., data = whiteWine.3.learn, CV=TRUE)
 
@@ -206,15 +198,42 @@ tab <- table(whiteWine.3.learn$quality, wine.lda.cv$class)
 
 wine.qda <- qda(quality ~ ., prior = c(1,1,1)/3, data = whiteWine.3.learn , CV=TRUE) 
 
-tab <- table(whiteWine.3$quality[learn], wine.qda$class)  
+tab <- table(whiteWine.3.learn$quality, wine.qda$class)  
 (error.LOOCV <- 100*(1-sum(tab[row(tab)==col(tab)])/sum(tab)))
 
+#Escojemos LDA
+
+model.lda <- lda(quality ~ ., data = whiteWine.3.learn)
+
+lda.predictions <- predict(model.lda, whiteWine.3.test)
+lda.predictions$class
+
+## and compute the error
+
+tab <- table(whiteWine.3.test$quality, lda.predictions$class)  
+tab
+error <- 100*(1-sum(tab[row(tab)==col(tab)])/sum(tab))
+error
+
+#SVM con kernel RBF
+
+obj <- tune.svm(quality~., data = whiteWine.3.learn, gamma =
+                  seq(.5, .9, by = .1), cost = seq(1,100, by = 10))
+
+(model <- svm(whiteWine.3.learn.input, whiteWine.3.learn.classes, type="C-classification", cost=21, gamma=0.8, kernel="radial", scale = FALSE, tolerance=1.0))
+pred.svm <- predict(model,whiteWine.3.test.input)
+
+t1 <- table(pred=pred.svm,truth=whiteWine.3.test$quality)
+error_rate.test <- 100*(1-sum(diag(t1))/nrow(whiteWine.3.test))
+error_rate.test
 
 # Random forest
 
-(ntrees <- round(10^seq(1,3,by=0.2)))
+model.rf.cv <- rfcv(whiteWine.3.learn.input, whiteWine.3.learn.classes, cv.fold=10)
 
-model.rf.cv <- tuneRF(whiteWine.3.learn.input, whiteWine.3.learn.classes, stepFactor=1.5)
+model.rf.cv$error.cv
+
+(ntrees <- round(10^seq(1,3,by=0.2)))
 
 rf.results <- matrix (rep(0,2*length(ntrees)),nrow=length(ntrees))
 colnames (rf.results) <- c("ntrees", "OOB")
@@ -230,7 +249,6 @@ for (nt in ntrees)
   model.rf <- randomForest(quality ~ ., data = whiteWine.3.learn, ntree=nt, proximity=FALSE, 
                            sampsize=c(bad=800, normal=800, good=800), mtry=3)
   
-  # get the OOB
   rf.results[ii,"OOB"] <- model.rf$err.rate[nt,1]
   
   ii <- ii+1
@@ -258,7 +276,6 @@ prop.table(ct, 1)
 
 (per.error <- round(100*(1-sum(diag(ct))/sum(ct)),2))
 
-(F1 <- harm (prop.table(ct,1)[1,1], prop.table(ct,1)[2,2]))
 
 importance(model.rf)
 
@@ -292,15 +309,11 @@ decays <- 10^seq(-3,0,by=1)
 model.nnet <- train (quality ~., data = whiteWine.3.learn, method='nnet', maxit = 200, trace = FALSE,
                      tuneGrid = expand.grid(.size=10,.decay=decays), trControl=trc)
 
-## Take your time to understand the output
-model.nnet
-model.nnet$value
-model.nnet$fitted.values
-model.nnet$wts
-summary(model.nnet)
+#El mejor valor de decay es 0.01
 
+model.nnet <- nnet(quality ~., data = whiteWine.3.learn, size=50, maxit=500, decay=0.01)
 
-p1 <- as.factor(predict (model.nnet, type="prob"))
+p1 <- as.factor(predict (model.nnet, type="class"))
 
 t1 <- table(p1,whiteWine.3.learn$quality)
 error_rate.learn <- 100*(1-sum(diag(t1))/nrow(whiteWine.3.learn))
@@ -308,19 +321,8 @@ error_rate.learn
 
 p2 <- as.factor(predict (model.nnet, newdata=whiteWine.test, type="class"))
 
-t2 <- table(pred=p2,truth=whiteWine.test$quality)
+t2 <- table(pred=p2,truth=whiteWine.3.test$quality)
 error_rate.test <- 100*(1-sum(diag(t2))/nrow(whiteWine.test))
 error_rate.test
 
 
-#SVM con kernel RBF
-
-obj <- tune.svm(quality~., data = whiteWine.3.learn, gamma =
-                  seq(.5, .9, by = .1), cost = seq(1,100, by = 10))
-
-(model <- svm(whiteWine.3.learn.input, whiteWine.3.learn.classes, type="C-classification", cost=31, gamma=0.8, kernel="radial", scale = FALSE))
-pred.svm <- predict(model,whiteWine.3.test.input)
-
-t1 <- table(pred=pred.svm,truth=whiteWine.3.test$quality)
-error_rate.test <- 100*(1-sum(diag(t1))/nrow(whiteWine.3.test))
-error_rate.test
